@@ -22,7 +22,7 @@ public:
         this->collumns = data[0].size();
     }
 
-    std::vector<double> operator[] (unsigned int index) {
+    std::vector<double>& operator[] (unsigned int index) {
         return data[index];
     }
 

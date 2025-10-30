@@ -3,15 +3,14 @@
 #include <Matrix/matrix.h>
 #include <Matrix/defaultmult.h>
 #include <Matrix/parallelmult.h>
-#include <TimeCheck/timer.h>
 
-#define NUMBER_OF_THREADS 10
+#define NUMBER_OF_THREADS 8
 
 int main() {
 
     srand(time(nullptr));
-    Matrix matrix1(4, 5);
-    Matrix matrix2(5, 6);
+    Matrix matrix1(1000, 1000);
+    Matrix matrix2(1000, 1000);
     matrix1.randomize();
     matrix2.randomize();
     std::chrono::steady_clock::time_point start;
@@ -28,7 +27,7 @@ int main() {
 
     start = std::chrono::steady_clock::now();
 
-    auto result2 = matrix1.pmultycol(matrix2, NUMBER_OF_THREADS);
+    auto result2 = matrix1 * matrix2;
 
     duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count();
 
