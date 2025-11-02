@@ -12,11 +12,11 @@ public:
     Matrix(unsigned int rows, unsigned int collumns) {
         this->rows = rows;
         this->collumns = collumns;
-        std::vector<std::vector<double>> default_data(this->collumns, std::vector<double>(this->rows, 0));
+        std::vector<std::vector<double>> default_data(this->rows, std::vector<double>(this->collumns, 0));
         this->data = default_data;
     }
 
-    Matrix(std::vector<std::vector<double>> data) {
+    explicit Matrix(const std::vector<std::vector<double>>& data) {
         this->data = data;
         this->rows = data.size();
         this->collumns = data[0].size();
@@ -26,9 +26,9 @@ public:
         return data[index];
     }
 
-    Matrix operator* (Matrix);
-    Matrix operator% (Matrix);
-    bool operator== (Matrix);
+    Matrix operator* (const Matrix&) const;
+    Matrix operator% (const Matrix&) const;
+    bool operator== (const Matrix&) const;
 
     Matrix pmulty (Matrix&, unsigned int); // параллельноумножим
     Matrix pmultycol (Matrix&, unsigned int); // параллельноумножим
@@ -39,27 +39,3 @@ public:
 
 };
 
-inline std::ostream& operator << (std::ostream &os, const Matrix &matrix) {
-    for (unsigned int i = 0; i < matrix.rows; i++) {
-        os << "| ";
-        for (unsigned int j = 0; j < matrix.collumns; j++) {
-            os << matrix.data[i][j] << "\t";
-        }
-        os << "|\n";
-    }
-    return os;
-}
-
-inline bool Matrix::operator==(Matrix other) {
-    if (this->collumns != other.collumns or this->rows != other.rows) {
-        return false;
-    }
-    for (int i = 0; i < this->rows; i++) {
-        for (int j = 0; j < this->collumns; j++) {
-            if (this->data[i][j] != other.data[i][j]) {
-                return false;
-            }
-        }
-    }
-    return true;
-}

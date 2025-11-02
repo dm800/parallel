@@ -1,14 +1,12 @@
 cmake_minimum_required(VERSION 3.20)
-
 project(lab1 LANGUAGES CXX)
 
-add_executable(lab1)
-target_sources(lab1 PRIVATE
+add_executable(lab1
         main.cpp
-        include/Matrix/matrix.h
-        include/Matrix/defaultmult.h
-        include/Matrix/parallelmult.h
-        include/Generate/randomgen.h
+        include/Matrix/Matrix.cpp
+        include/Matrix/defaultmult.cpp
+        include/Matrix/parallelmult.cpp
+        include/Generate/randomgen.cpp
 )
 
 target_include_directories(lab1 PRIVATE

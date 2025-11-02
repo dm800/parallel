@@ -1,8 +1,7 @@
 #include <vector>
 #include <iostream>
+#include <chrono>
 #include <Matrix/matrix.h>
-#include <Matrix/defaultmult.h>
-#include <Matrix/parallelmult.h>
 
 #define NUMBER_OF_THREADS 8
 

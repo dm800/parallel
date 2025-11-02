@@ -1,10 +1,9 @@
-#pragma once
 #include <Matrix/matrix.h>
 #include <cassert>
 #include <thread>
 
 
-inline void calculate_part(Matrix* A, Matrix* B, unsigned int x1, unsigned int x2, std::vector<std::vector<double>>* result) {
+void calculate_part(Matrix* A, Matrix* B, unsigned int x1, unsigned int x2, std::vector<std::vector<double>>* result) {
     if (x2 > A->rows) {
         x2 = A->rows;
     }
@@ -19,7 +18,7 @@ inline void calculate_part(Matrix* A, Matrix* B, unsigned int x1, unsigned int x
     }
 }
 
-inline Matrix Matrix::pmulty(Matrix& other, unsigned int threads) {
+Matrix Matrix::pmulty(Matrix& other, unsigned int threads) {
     assert(this->collumns == other.rows);
     assert(threads != 0);
     std::vector<std::vector<double>> result(this->rows, std::vector<double>(other.collumns, 0));
@@ -36,11 +35,11 @@ inline Matrix Matrix::pmulty(Matrix& other, unsigned int threads) {
         t.join();
     }
 
-    return result;
+    return Matrix(result);
 }
 
 
-inline void calculate_part_col(Matrix* A, Matrix* B, unsigned int x1, unsigned int x2, std::vector<std::vector<double>>* result) {
+void calculate_part_col(Matrix* A, Matrix* B, unsigned int x1, unsigned int x2, std::vector<std::vector<double>>* result) {
     if (x2 > A->collumns) {
         x2 = A->collumns;
     }
@@ -65,12 +64,12 @@ inline Matrix Matrix::pmultycol(Matrix& other, unsigned int threads) {
     }
     int step = this->collumns / threads;
     for (unsigned int i = 0; i < this->collumns; i += step) {
-        std::thread t(calculate_part, this, &other, i, i + step, &result);
+        std::thread t(calculate_part_col, this, &other, i, i + step, &result);
         pool.push_back(std::move(t));
     }
     for (std::thread& t : pool) {
         t.join();
     }
 
-    return result;
+    return Matrix(result);
 }
