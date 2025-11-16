@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <Generate/randomgen.h>
+#include <iosfwd>
 
 class Matrix {
 public:
@@ -16,10 +17,20 @@ public:
         this->data = default_data;
     }
 
+    Matrix() {
+        this->rows = 0;
+        this->collumns = 0;
+        this->data = {};
+    }
+
     explicit Matrix(const std::vector<std::vector<double>>& data) {
         this->data = data;
         this->rows = data.size();
-        this->collumns = data[0].size();
+        if (!data.empty()) {
+            this->collumns = data[0].size();
+        } else {
+            this->collumns = 0;
+        }
     }
 
     std::vector<double>& operator[] (unsigned int index) {
@@ -28,6 +39,11 @@ public:
 
     Matrix operator* (const Matrix&) const;
     Matrix operator% (const Matrix&) const;
+    Matrix operator- (const Matrix&) const;
+
+    Matrix operator* (double alpha) const;
+
+    Matrix operator+ (const Matrix&) const;
     bool operator== (const Matrix&) const;
 
     Matrix pmulty (Matrix&, unsigned int); // параллельноумножим
@@ -39,3 +55,5 @@ public:
 
 };
 
+std::ostream& operator<<(std::ostream& os, const Matrix& matrix);
+Matrix operator* (double, const Matrix&);

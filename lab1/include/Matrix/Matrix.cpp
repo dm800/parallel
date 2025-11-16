@@ -1,3 +1,4 @@
+#include <cassert>
 #include <Matrix/matrix.h>
 #include <iostream>
 
@@ -24,4 +25,54 @@ bool Matrix::operator==(const Matrix& other) const {
         }
     }
     return true;
+}
+
+
+Matrix Matrix::operator+(const Matrix & other) const {
+    assert(this->rows != other.rows);
+    assert(this->collumns != other.collumns);
+    std::vector<std::vector<double>> new_data = {};
+    for (int i = 0; i < this->rows; i++) {
+        std::vector<double> row = {};
+        for (int k = 0; k < this->collumns; k++) {
+            double number = this->data[i][k] + other.data[i][k];
+            row.push_back(number);
+        }
+        new_data.push_back(row);
+    }
+    return Matrix(new_data);
+}
+
+
+Matrix Matrix::operator-(const Matrix & other) const {
+    assert(this->rows != other.rows);
+    assert(this->collumns != other.collumns);
+    std::vector<std::vector<double>> new_data = {};
+    for (int i = 0; i < this->rows; i++) {
+        std::vector<double> row = {};
+        for (int k = 0; k < this->collumns; k++) {
+            double number = this->data[i][k] - other.data[i][k];
+            row.push_back(number);
+        }
+        new_data.push_back(row);
+    }
+    return Matrix(new_data);
+}
+
+
+Matrix Matrix::operator* (double alpha) const {
+    std::vector<std::vector<double>> ndata = {};
+    for (int i = 0; i < this->collumns;i++) {
+        std::vector<double> row = {};
+        for (int k = 0; k < this->rows; k++) {
+            double number = this->data[k][i] * alpha;
+            row.push_back(number);
+        }
+        ndata.push_back(row);
+    }
+    return Matrix(ndata);
+}
+
+Matrix operator* (const double alpha, const Matrix& matrix) {
+    return matrix * alpha;
 }
