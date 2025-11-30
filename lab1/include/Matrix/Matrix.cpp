@@ -29,8 +29,8 @@ bool Matrix::operator==(const Matrix& other) const {
 
 
 Matrix Matrix::operator+(const Matrix & other) const {
-    assert(this->rows != other.rows);
-    assert(this->collumns != other.collumns);
+    assert(this->rows == other.rows);
+    assert(this->collumns == other.collumns);
     std::vector<std::vector<double>> new_data = {};
     for (int i = 0; i < this->rows; i++) {
         std::vector<double> row = {};
@@ -45,8 +45,8 @@ Matrix Matrix::operator+(const Matrix & other) const {
 
 
 Matrix Matrix::operator-(const Matrix & other) const {
-    assert(this->rows != other.rows);
-    assert(this->collumns != other.collumns);
+    assert(this->rows == other.rows);
+    assert(this->collumns == other.collumns);
     std::vector<std::vector<double>> new_data = {};
     for (int i = 0; i < this->rows; i++) {
         std::vector<double> row = {};
@@ -61,15 +61,17 @@ Matrix Matrix::operator-(const Matrix & other) const {
 
 
 Matrix Matrix::operator* (double alpha) const {
-    std::vector<std::vector<double>> ndata = {};
-    for (int i = 0; i < this->collumns;i++) {
-        std::vector<double> row = {};
-        for (int k = 0; k < this->rows; k++) {
-            double number = this->data[k][i] * alpha;
-            row.push_back(number);
+    std::vector<std::vector<double>> ndata(
+        this->rows,
+        std::vector<double>(this->collumns)
+    );
+
+    for (unsigned int i = 0; i < this->rows; ++i) {
+        for (unsigned int j = 0; j < this->collumns; ++j) {
+            ndata[i][j] = this->data[i][j] * alpha;
         }
-        ndata.push_back(row);
     }
+
     return Matrix(ndata);
 }
 
