@@ -4,7 +4,6 @@ project(Parallel LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# --- найдём MPI, чтобы взять mpiexec и цели линковки ---
 find_package(MPI REQUIRED)
 
 # Параметры запуска (можно менять через CMake Cache / CLion)
@@ -14,6 +13,7 @@ set(APP_ARGS "" CACHE STRING "Arguments to pass to lab2")
 # Подкаталоги
 add_subdirectory(lab1)  # ДОЛЖЕН собирать исполняемый таргет 'lab1'
 add_subdirectory(lab2)  # ДОЛЖЕН собирать 'lab2_bin' и (опционально) custom target 'lab2'
+add_subdirectory(lab4)
 
 # Единая цель, которая ПОСЛЕДОВАТЕЛЬНО запускает lab1 и lab2_bin через mpiexec
 add_custom_target(run_all

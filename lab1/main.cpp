@@ -3,13 +3,13 @@
 #include <chrono>
 #include <Matrix/matrix.h>
 
-#define NUMBER_OF_THREADS 8
+#define NUMBER_OF_THREADS 16
 
 int main() {
 
     srand(time(nullptr));
-    Matrix matrix1(1000, 1000);
-    Matrix matrix2(1000, 1000);
+    Matrix matrix1(10000, 10000);
+    Matrix matrix2(10000, 10000);
     matrix1.randomize();
     matrix2.randomize();
     std::chrono::steady_clock::time_point start;
