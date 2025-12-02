@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(MPI REQUIRED)
 
 # Параметры запуска (можно менять через CMake Cache / CLion)
-set(MPI_PROCS 4 CACHE STRING "How many MPI processes to run")
+set(MPI_PROCS 1 CACHE STRING "How many MPI processes to run")
 set(APP_ARGS "" CACHE STRING "Arguments to pass to lab2")
 
 # Подкаталоги

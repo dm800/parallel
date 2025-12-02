@@ -4,7 +4,7 @@
 #include <mpi.h>
 #include <Matrix/matrix.h>
 
-#define SIZE 8000
+#define SIZE 40000
 
 void get_rows_range(int N, int size, int rank, int& row_start, int& row_end) {
     int base = N / size;
@@ -80,11 +80,9 @@ int main(int argc, char** argv) {
 
     for (int i = 0; i < N; ++i) {
         b.data[i][0] = N + 1.0;
-        x.data[i][0] = 0.0;
-    }
+        x.data[i][0] = (i % 2 == 0 ? 0.0 : -1.0);
 
-    r = b;
-    z = r;
+    }
 
     std::vector<int> counts(size), displs(size);
     for (int rnk = 0; rnk < size; ++rnk) {
@@ -93,6 +91,26 @@ int main(int argc, char** argv) {
         counts[rnk] = re - rs;
         displs[rnk] = rs;
     }
+
+    Matrix Ax(N, 1);
+    std::vector<double> Ax_local_vec(local_rows);
+    std::vector<double> Ax_full(N);
+
+    Matrix Ax_local = A_local * x;
+    for (int i = 0; i < local_rows; ++i) {
+        Ax_local_vec[i] = Ax_local.data[i][0];
+    }
+
+    MPI_Allgatherv(Ax_local_vec.data(), local_rows, MPI_DOUBLE,
+                   Ax_full.data(), counts.data(), displs.data(),
+                   MPI_DOUBLE, MPI_COMM_WORLD);
+
+    for (int i = 0; i < N; ++i) {
+        Ax.data[i][0] = Ax_full[i];
+    }
+
+    r = b - Ax;
+    z = r;
 
     std::vector<double> Az_local_vec(local_rows);
     std::vector<double> Az_full(N);
@@ -150,11 +168,14 @@ int main(int argc, char** argv) {
         std::cout << "\nConjugate gradient finished" << std::endl;
         std::cout << "iterations = " << iter << std::endl;
         std::cout << "epsilon = " << epsilon << std::endl;
-        std::cout << "result x:" << std::endl;
-        std::cout << x << std::endl;
         std::cout << "execution time = " << (t_end - t_start) << " s" << std::endl;
+        //std::cout << "result x:\n" << x << std::endl;
     }
 
     MPI_Finalize();
     return 0;
 }
+
+// 1: 15.2826s 20.7013s 20.8069s
+// 4: 3.35s 7.86s 7.065s
+// 8: 4.41s 2.66s 2.017s
