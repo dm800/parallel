@@ -21,7 +21,7 @@ target_link_libraries(lab2_bin PRIVATE MPI::MPI_CXX)
 target_compile_features(lab2_bin PRIVATE cxx_std_23)
 
 
-set(MPI_PROCS 1 CACHE STRING "How many MPI processes to run")
+set(MPI_PROCS 8 CACHE STRING "How many MPI processes to run")
 set(APP_ARGS "" CACHE STRING "Arguments to pass to the app")
 
 

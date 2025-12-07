@@ -13,6 +13,7 @@ set(APP_ARGS "" CACHE STRING "Arguments to pass to lab2")
 # Подкаталоги
 add_subdirectory(lab1)  # ДОЛЖЕН собирать исполняемый таргет 'lab1'
 add_subdirectory(lab2)  # ДОЛЖЕН собирать 'lab2_bin' и (опционально) custom target 'lab2'
+add_subdirectory(lab3)
 add_subdirectory(lab4)
 
 # Единая цель, которая ПОСЛЕДОВАТЕЛЬНО запускает lab1 и lab2_bin через mpiexec

@@ -80,7 +80,7 @@ int main(int argc, char** argv) {
 
     for (int i = 0; i < N; ++i) {
         b.data[i][0] = N + 1.0;
-        x.data[i][0] = (i % 2 == 0 ? 0.0 : -1.0);
+        x.data[i][0] = 0;
 
     }
 
