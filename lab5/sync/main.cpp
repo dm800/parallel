@@ -1,150 +1,123 @@
 #include <iostream>
-#include <vector>
 #include <thread>
+#include <vector>
+#include <random>
 #include <atomic>
-#include <cstdlib>
-
-using namespace std;
-
-#define ROWS 1000
-#define COLS 1000
-#define STEPS 100
 #define THREADS 4
+#define COUNT 100
 
-atomic<int> working(0);
+struct SpinFlag {
+    std::atomic<int> f{0};
 
-void enter_step() {
-    working.fetch_add(1);
-}
-
-void wait_all_finished() {
-    working.fetch_sub(1);
-    while (working.load() != 0) {
-        this_thread::yield();
-    }
-}
-
-class Worker {
-public:
-    int tid;
-    int rows;
-    vector<int> local;
-    vector<int> next_local;
-    vector<int> inbox_top;
-    vector<int> inbox_bottom;
-    Worker* up;
-    Worker* down;
-    thread th;
-
-    Worker(int id, int r)
-        : tid(id), rows(r),
-          local(r * COLS),
-          next_local(r * COLS),
-          inbox_top(COLS),
-          inbox_bottom(COLS),
-          up(nullptr),
-          down(nullptr) {}
-
-    void start() {
-        th = thread(&Worker::run, this);
-    }
-
-    void join() {
-        th.join();
-    }
-
-    void send() {
-        for (int j = 0; j < COLS; j++) {
-            up->inbox_bottom[j] = local[j];
-            down->inbox_top[j] = local[(rows - 1) * COLS + j];
-        }
-    }
-
-    int evolve(int alive, int n) {
-        if (alive) {
-            if (n < 2) return 0;
-            if (n == 2 || n == 3) return 1;
-            return 0;
-        }
-        return (n == 3) ? 1 : 0;
-    }
-
-    void run() {
-        for (int step = 0; step < STEPS; step++) {
-
-            enter_step();
-            send();
-            wait_all_finished();
-
-            enter_step();
-            for (int i = 0; i < rows; i++) {
-                for (int j = 0; j < COLS; j++) {
-
-                    int jl = (j - 1 + COLS) % COLS;
-                    int jr = (j + 1) % COLS;
-                    int n = 0;
-
-                    if (i == 0) {
-                        n += inbox_top[jl];
-                        n += inbox_top[j];
-                        n += inbox_top[jr];
-                    } else {
-                        n += local[(i - 1) * COLS + jl];
-                        n += local[(i - 1) * COLS + j];
-                        n += local[(i - 1) * COLS + jr];
-                    }
-
-                    n += local[i * COLS + jl];
-                    n += local[i * COLS + jr];
-
-                    if (i == rows - 1) {
-                        n += inbox_bottom[jl];
-                        n += inbox_bottom[j];
-                        n += inbox_bottom[jr];
-                    } else {
-                        n += local[(i + 1) * COLS + jl];
-                        n += local[(i + 1) * COLS + j];
-                        n += local[(i + 1) * COLS + jr];
-                    }
-
-                    next_local[i * COLS + j] =
-                        evolve(local[i * COLS + j], n);
-                }
+    void lock() {
+        for (;;) {
+            int expected = 0;
+            if (f.compare_exchange_weak(expected, 1,
+                                        std::memory_order_acq_rel,
+                                        std::memory_order_relaxed)) {
+                return;
             }
-            wait_all_finished();
+            std::this_thread::yield();
+        }
+    }
 
-            enter_step();
-            local.swap(next_local);
-            wait_all_finished();
+    void unlock() {
+        f.store(0, std::memory_order_release);
+    }
+};
+
+struct Node {
+    int value;
+    std::atomic<Node*> next;
+
+    explicit Node(int v) : value(v), next(nullptr) {}
+};
+
+class LinkedList {
+public:
+    std::atomic<Node*> head{nullptr};
+    Node* tail{nullptr};
+
+    bool contains(int value) const {
+        Node* cur = head.load(std::memory_order_acquire);
+        while (cur) {
+            if (cur->value == value) return true;
+            cur = cur->next.load(std::memory_order_acquire);
+        }
+        return false;
+    }
+
+    void add_no_check(int value) {
+        Node* n = new Node(value);
+
+        Node* h = head.load(std::memory_order_acquire);
+        if (!h) {
+            head.store(n, std::memory_order_release);
+            tail = n;
+            return;
+        }
+
+        tail->next.store(n, std::memory_order_release);
+        tail = n;
+    }
+
+    ~LinkedList() {
+        Node* cur = head.load(std::memory_order_acquire);
+        while (cur) {
+            Node* nxt = cur->next.load(std::memory_order_acquire);
+            delete cur;
+            cur = nxt;
         }
     }
 };
 
-int main() {
-    vector<Worker*> workers;
+SpinFlag read_lock;
+SpinFlag write_lock;
 
-    for (int i = 0; i < THREADS; i++) {
-        int rows =
-            (i == THREADS - 1)
-                ? ROWS - i * (ROWS / THREADS)
-                : ROWS / THREADS;
-        workers.push_back(new Worker(i, rows));
-    }
+void worker(int num_values, LinkedList& list) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<int> dis(0, 1000);
 
-    for (int i = 0; i < THREADS; i++) {
-        workers[i]->up = workers[(i - 1 + THREADS) % THREADS];
-        workers[i]->down = workers[(i + 1) % THREADS];
-    }
+    for (int i = 0; i < num_values; i++) {
+        int v = dis(gen);
 
-    for (auto w : workers) {
-        for (int& x : w->local) {
-            x = rand() % 2;
+        read_lock.lock();
+        bool exists = list.contains(v);
+        read_lock.unlock();
+        if (exists) continue;
+
+        write_lock.lock();
+        if (!list.contains(v)) {
+            list.add_no_check(v);
         }
+        write_lock.unlock();
+    }
+}
+
+int main() {
+    LinkedList list;
+
+    std::vector<std::thread> threads;
+    threads.reserve(THREADS);
+
+    for (int i = 0; i < THREADS; i++) {
+        threads.emplace_back(worker, COUNT, std::ref(list));
     }
 
-    for (auto w : workers) w->start();
-    for (auto w : workers) w->join();
+    for (auto& t : threads) {
+        t.join();
+    }
 
-    cout << "Done\n";
+    read_lock.lock();
+    Node* cur = list.head.load(std::memory_order_acquire);
+    std::cout << "Result list: ";
+    while (cur) {
+        std::cout << cur->value << " ";
+        cur = cur->next.load(std::memory_order_acquire);
+    }
+    std::cout << "\n";
+    read_lock.unlock();
+
     return 0;
 }
